@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cooldown Timer</title>
+</head>
+<body>
+    <h1>Cooldown Timer</h1>
+    <p id="timer">
+        {% if remaining_time > 0 %}
+            {{ remaining_time }} seconds
+        {% else %}
+            Ready!
+        {% endif %}
+    </p>
+
+    <!-- Add a button to feed the chickens -->
+    <button id="feed-button">Feed the Chickens</button>
+
+    <!-- Include SocketIO client library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
+
+    <script>
+        // Connect to the SocketIO server
+        var socket = io();
+
+        // Set initial remaining time from the server-rendered value
+        var remainingTime = {{ remaining_time }};
+
+        // Function to update the timer display
+        function updateTimer() {
+            if (remainingTime > 0) {
+                remainingTime--;
+                document.getElementById('timer').innerText = remainingTime + ' seconds';
+            } else {
+                document.getElementById('timer').innerText = 'Ready!';
+            }
+        }
+
+        // Update the timer every second
+        setInterval(updateTimer, 1000);
+
+        // Listen for 'update_timer' events from the server
+        socket.on('update_timer', function(data) {
+            remainingTime = data.remaining_time;
+            document.getElementById('timer').innerText = remainingTime + ' seconds';
+        });
+
+        // Handle the feed button click
+        document.getElementById('feed-button').addEventListener('click', function() {
+            // Send a 'feed_chickens' event to the server
+            socket.emit('feed_chickens');
+        });
+
+        // Handle response from server
+        socket.on('feed_response', function(data) {
+            alert(data.message);
+        });
+    </script>
+</body>
+</html>
